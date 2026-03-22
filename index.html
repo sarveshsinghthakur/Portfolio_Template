@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Editable Portfolio Pro</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Cormorant+Garamond:wght@600;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    :root {
+      --bg-1: #08111f;
+      --bg-2: #10213c;
+      --bg-3: #19345f;
+      --card: rgba(255, 255, 255, 0.08);
+      --card-strong: rgba(255, 255, 255, 0.12);
+      --border: rgba(255, 255, 255, 0.14);
+      --text: #f4f1ea;
+      --muted: #c7d1df;
+      --accent: #ff8a5b;
+      --accent-2: #ffd166;
+      --accent-3: #41d6b3;
+      --danger: #ff7b8a;
+      --shadow: 0 18px 50px rgba(0, 0, 0, 0.28);
+      --radius: 24px;
+    }
+    html {
+      scroll-behavior: smooth;
+    }
+    body {
+      min-height: 100vh;
+      color: var(--text);
+      font-family: "Space Grotesk", sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(255, 138, 91, 0.18), transparent 26%),
+        radial-gradient(circle at right center, rgba(65, 214, 179, 0.14), transparent 26%),
+        linear-gradient(135deg, var(--bg-1), var(--bg-2), var(--bg-3));
+      background-size: 100% 100%, 100% 100%, 200% 200%;
+      animation: gradientShift 16s ease infinite;
+      overflow-x: hidden;
+    }
+    @keyframes gradientShift {
+      0% { background-position: 0% 0%, 100% 100%, 0% 50%; }
+      50% { background-position: 10% 10%, 90% 90%, 100% 50%; }
+      100% { background-position: 0% 0%, 100% 100%, 0% 50%; }
+    }
+    .blob {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(14px);
+      opacity: 0.45;
+      pointer-events: none;
+      z-index: 0;
+      animation: floatBlob 14s ease-in-out infinite;
+    }
+    .blob.one {
+      width: 180px;
+      height: 180px;
+      left: -40px;
+      top: 80px;
+      background: rgba(255, 138, 91, 0.28);
+    }
+    .blob.two {
+      width: 220px;
+      height: 220px;
+      right: -60px;
+      top: 360px;
+      background: rgba(65, 214, 179, 0.24);
+      animation-duration: 18s;
+    }
+    .blob.three {
+      width: 160px;
+      height: 160px;
+      left: 35%;
+      bottom: -40px;
+      background: rgba(255, 209, 102, 0.2);
+      animation-duration: 12s;
+    }
+    @keyframes floatBlob {
+      0%, 100% { transform: translateY(0) translateX(0); }
+      50% { transform: translateY(-20px) translateX(18px); }
+    }
+    .wrap {
+      position: relative;
+      z-index: 1;
+    }
+    .toolbar {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      padding: 14px;
+      background: rgba(8, 17, 31, 0.8);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    .toolbar button,
+    .mini-btn,
+    .chip-btn {
+      border: none;
+      cursor: pointer;
+      font-family: inherit;
+      font-weight: 700;
+      transition: transform 0.2s ease, opacity 0.2s ease, background 0.2s ease;
+    }
+    .toolbar button {
+      padding: 12px 18px;
+      border-radius: 999px;
+      color: #08111f;
+      background: linear-gradient(135deg, var(--accent-2), var(--accent));
+    }
+    .toolbar button:nth-child(2) {
+      background: linear-gradient(135deg, var(--accent-3), #a4ffe8);
+    }
+    .toolbar button:nth-child(3) {
+      background: linear-gradient(135deg, #ffc2cb, #ff8a9d);
+    }
+    .toolbar button:hover,
+    .mini-btn:hover,
+    .chip-btn:hover {
+      transform: translateY(-2px);
+      opacity: 0.96;
+    }
+    .tip {
+      text-align: center;
+      padding: 14px 18px 0;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+    .container {
+      width: min(1180px, calc(100% - 28px));
+      margin: 0 auto;
+    }
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--border);
+      backdrop-filter: blur(14px);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+    .section {
+      padding: 34px 0;
+    }
+    .section-head {
+      text-align: center;
+      margin-bottom: 22px;
+      animation: rise 0.8s ease;
+    }
+    .section-head .eyebrow {
+      display: block;
+      color: var(--accent-3);
+      margin-bottom: 8px;
+      font-size: 0.95rem;
+    }
+    .section-head h2 {
+      font-family: "Cormorant Garamond", serif;
+      font-size: clamp(2.2rem, 5vw, 3.5rem);
+    }
+    .section-head p {
+      max-width: 760px;
+      margin: 10px auto 0;
+      color: var(--muted);
+    }
+    .hero {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 24px;
+      align-items: center;
+      padding: 30px 0 46px;
+    }
+    .hero-copy,
+    .hero-card,
+    .about-card,
+    .contact-card {
+      padding: 30px;
+      animation: rise 0.9s ease;
+    }
+    .badge {
+      display: inline-block;
+      padding: 8px 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.06);
+      color: var(--accent-2);
+      margin-bottom: 16px;
+    }
+    .hero h1 {
+      font-family: "Cormorant Garamond", serif;
+      font-size: clamp(3.2rem, 8vw, 5.5rem);
+      line-height: 0.92;
+      margin-bottom: 14px;
+    }
+    .hero h3 {
+      color: var(--accent-3);
+      margin-bottom: 16px;
+      font-size: clamp(1.05rem, 2vw, 1.3rem);
+    }
+    .hero p {
+      color: var(--muted);
+      margin-bottom: 24px;
+      max-width: 650px;
+      font-size: 1.04rem;
+    }
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .hero-actions a {
+      text-decoration: none;
+      padding: 14px 20px;
+      border-radius: 999px;
+      font-weight: 700;
+      transition: transform 0.2s ease;
+    }
+    .hero-actions a:hover {
+      transform: translateY(-3px);
+    }
+    .primary {
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      color: #08111f;
+    }
+    .ghost {
+      color: var(--text);
+      border: 1px solid rgba(255,255,255,0.16);
+      background: rgba(255,255,255,0.04);
+    }
+    .hero-card {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      min-height: 470px;
+      justify-content: center;
+    }
+    .profile-image-wrap {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      flex-wrap: wrap;
+    }
+    .profile-image {
+      width: 120px;
+      height: 120px;
+      object-fit: cover;
+      border-radius: 28px;
+      border: 2px solid rgba(255,255,255,0.18);
+      background: linear-gradient(135deg, var(--accent), var(--accent-3));
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+    .stat {
+      padding: 16px 12px;
+      border-radius: 18px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.09);
+      text-align: center;
+    }
+    .stat strong {
+      display: block;
+      color: var(--accent-2);
+      font-size: 1.2rem;
+      margin-bottom: 6px;
+    }
+    .mini-btn,
+    .chip-btn {
+      color: #08111f;
+      border-radius: 999px;
+      background: linear-gradient(135deg, var(--accent-2), var(--accent));
+      padding: 10px 14px;
+    }
+    .chip-btn.danger {
+      background: linear-gradient(135deg, #ffb4bf, var(--danger));
+    }
+    .actions-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 14px;
+    }
+    .about-card p,
+    .contact-card p {
+      color: var(--muted);
+      margin-bottom: 18px;
+    }
+    .skills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .skills span {
+      padding: 10px 14px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: var(--accent-2);
+    }
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    .list-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+    }
+    .card-item {
+      padding: 20px;
+      animation: rise 0.8s ease;
+    }
+    .card-item h3,
+    .card-item h4 {
+      margin-bottom: 10px;
+    }
+    .card-item p {
+      color: var(--muted);
+      margin-bottom: 14px;
+    }
+    .meta {
+      color: var(--accent-3);
+      font-size: 0.92rem;
+      margin-bottom: 10px;
+    }
+    .project-image,
+    .social-image {
+      width: 100%;
+      object-fit: cover;
+      border-radius: 18px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    .project-image {
+      height: 180px;
+      margin-bottom: 14px;
+    }
+    .social-card {
+      text-align: center;
+    }
+    .social-image {
+      width: 72px;
+      height: 72px;
+      margin: 0 auto 14px;
+      border-radius: 18px;
+    }
+    .inline-link {
+      color: var(--accent-2);
+      text-decoration: none;
+      word-break: break-word;
+    }
+    .inline-link:hover {
+      text-decoration: underline;
+    }
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+      margin-top: 18px;
+    }
+    .fake-input,
+    .fake-textarea {
+      width: 100%;
+      padding: 14px 16px;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(255,255,255,0.06);
+      color: var(--text);
+      font: inherit;
+    }
+    .fake-textarea {
+      min-height: 130px;
+      grid-column: 1 / -1;
+      resize: vertical;
+    }
+    footer {
+      padding: 30px 0 50px;
+      text-align: center;
+      color: var(--muted);
+    }
+    [contenteditable="true"] {
+      outline: none;
+      border-radius: 8px;
+      transition: background 0.2s ease, box-shadow 0.2s ease;
+    }
+    [contenteditable="true"]:focus {
+      background: rgba(255,255,255,0.12);
+      box-shadow: 0 0 0 2px rgba(255, 209, 102, 0.4);
+    }
+    .hidden-input {
+      display: none;
+    }
+    @keyframes rise {
+      from {
+        opacity: 0;
+        transform: translateY(24px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    @media (max-width: 1024px) {
+      .hero,
+      .grid-2 {
+        grid-template-columns: 1fr;
+      }
+      .list-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+    @media (max-width: 680px) {
+      .container {
+        width: min(100% - 18px, 1180px);
+      }
+      .hero-copy,
+      .hero-card,
+      .about-card,
+      .contact-card,
+      .card-item {
+        padding: 20px;
+      }
+      .list-grid,
+      .form-grid,
+      .stats {
+        grid-template-columns: 1fr;
+      }
+      .toolbar button,
+      .mini-btn,
+      .chip-btn {
+        width: 100%;
+      }
+      .hero-actions {
+        flex-direction: column;
+      }
+      .hero-actions a {
+        text-align: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="blob one"></div>
+  <div class="blob two"></div>
+  <div class="blob three"></div>
+  <div class="wrap">
+    <div class="toolbar">
+      <button onclick="saveSite()">Save Changes</button>
+      <button onclick="addEducation()">Add Education</button>
+      <button onclick="addProject()">Add Project</button>
+      <button onclick="addBlog()">Add Blog</button>
+      <button onclick="addSocial()">Add Social</button>
+      <button onclick="resetSite()">Reset</button>
+    </div>
+    <p class="tip">Click text to edit. Upload images, add links, then save everything in your browser.</p>
+    <div id="app">
+      <div class="container">
+        <section class="hero section">
+          <div class="panel hero-copy">
+            <div class="badge" contenteditable="true">Open to internships, freelance and full-time roles</div>
+            <h1 contenteditable="true">Your Name</h1>
+            <h3 contenteditable="true">Software Engineer | Frontend Developer | Problem Solver</h3>
+            <p contenteditable="true">
+              I build responsive, modern, and visually engaging digital experiences. This live portfolio lets you edit content directly in the browser without touching the code every time.
+            </p>
+            <div class="hero-actions">
+              <a class="primary" href="#projects">View Projects</a>
+              <a class="ghost" href="#contact">Contact Me</a>
+            </div>
+          </div>
+          <div class="panel hero-card">
+            <div class="profile-image-wrap">
+              <img
+                id="profileImage"
+                class="profile-image"
+                src="https://via.placeholder.com/300x300.png?text=Your+Photo"
+                alt="Profile"
+              />
+              <div>
+                <h3 contenteditable="true">Hi, I am a creative tech builder</h3>
+                <p contenteditable="true">Add your photo, role, short intro, and key highlights here.</p>
+                <div class="actions-row">
+                  <button class="mini-btn" onclick="triggerUpload('profileImageInput')">Upload Profile Image</button>
+                </div>
+                <input class="hidden-input" id="profileImageInput" type="file" accept="image/*" onchange="handleImageUpload(event, 'profileImage')" />
+              </div>
+            </div>
+            <div class="stats">
+              <div class="stat">
+                <strong contenteditable="true">15+</strong>
+                <span contenteditable="true">Projects</span>
+              </div>
+              <div class="stat">
+                <strong contenteditable="true">4+</strong>
+                <span contenteditable="true">Technologies</span>
+              </div>
+              <div class="stat">
+                <strong contenteditable="true">2026</strong>
+                <span contenteditable="true">Ready to grow</span>
+              </div>
+            </div>
+          </div>
+        </section>
+        <section class="section" id="about">
+          <div class="section-head">
+            <span class="eyebrow" contenteditable="true">About Me</span>
+            <h2 contenteditable="true">Who I am</h2>
+            <p contenteditable="true">Use this section to describe yourself, your role, your goals, and the kind of work you love doing.</p>
+          </div>
+          <div class="grid-2">
+            <div class="panel about-card">
+              <h3 contenteditable="true">I am a Software Engineer</h3>
+              <p contenteditable="true">
+                I enjoy building websites and applications that are fast, clean, user-friendly, and meaningful. I like solving real problems through code and design.
+              </p>
+              <p contenteditable="true">
+                You can write about your interests here like web development, software engineering, UI design, backend systems, AI, open source, or anything else.
+              </p>
+            </div>
+            <div class="panel about-card">
+              <h3 contenteditable="true">Skills & Interests</h3>
+              <div class="skills">
+                <span contenteditable="true">HTML</span>
+                <span contenteditable="true">CSS</span>
+                <span contenteditable="true">JavaScript</span>
+                <span contenteditable="true">React</span>
+                <span contenteditable="true">Node.js</span>
+                <span contenteditable="true">UI Design</span>
+              </div>
+            </div>
+          </div>
+        </section>
+        <section class="section" id="education">
+          <div class="section-head">
+            <span class="eyebrow" contenteditable="true">Education</span>
+            <h2 contenteditable="true">My academic journey</h2>
+            <p contenteditable="true">Add your school, college, degree, year, score, or achievements here.</p>
+          </div>
+          <div class="list-grid" id="educationContainer">
+            <div class="panel card-item education-card">
+              <div class="meta" contenteditable="true">2022 - 2026</div>
+              <h3 contenteditable="true">B.Tech in Computer Science</h3>
+              <p contenteditable="true">Your College Name</p>
+              <p contenteditable="true">CGPA / Percentage: 8.5</p>
+              <button class="chip-btn danger" onclick="removeCard(this, '.education-card')">Remove</button>
+            </div>
+          </div>
+        </section>
+        <section class="section" id="projects">
+          <div class="section-head">
+            <span class="eyebrow" contenteditable="true">Projects</span>
+            <h2 contenteditable="true">Featured work</h2>
+            <p contenteditable="true">Each project supports image upload, editable title, description, tags, and a link.</p>
+          </div>
+          <div class="list-grid" id="projectsContainer">
+            <div class="panel card-item project-card">
+              <img class="project-image" id="projectImage1" src="https://via.placeholder.com/600x400.png?text=Project+Image" alt="Project image">
+              <input class="hidden-input" id="projectInput1" type="file" accept="image/*" onchange="handleImageUpload(event, 'projectImage1')" />
+              <div class="meta" contenteditable="true">Web App</div>
+              <h3 contenteditable="true">Portfolio Website</h3>
+              <p contenteditable="true">A responsive and animated personal portfolio website with editable browser content and colorful UI.</p>
+              <p><a class="inline-link project-link" href="https://example.com" target="_blank" contenteditable="true">https://example.com</a></p>
+              <div class="actions-row">
+                <button class="chip-btn" onclick="triggerUpload('projectInput1')">Upload Image</button>
+                <button class="chip-btn" onclick="editLink(this, '.project-card', '.project-link')">Edit Link</button>
+                <button class="chip-btn danger" onclick="removeCard(this, '.project-card')">Remove</button>
+              </div>
+            </div>
+          </div>
+        </section>
+        <section class="section" id="blogs">
+          <div class="section-head">
+            <span class="eyebrow" contenteditable="true">Blog</span>
+            <h2 contenteditable="true">Things I write about</h2>
+            <p contenteditable="true">You can use this to show blog posts, articles, tutorials, or notes.</p>
+          </div>
+          <div class="list-grid" id="blogContainer">
+            <div class="panel card-item blog-card">
+              <div class="meta" contenteditable="true">March 2026</div>
+              <h3 contenteditable="true">How I built my portfolio</h3>
+              <p contenteditable="true">A simple write-up about design choices, responsiveness, and editing content directly in the browser.</p>
+              <p><a class="inline-link blog-link" href="https://example.com/blog" target="_blank" contenteditable="true">https://example.com/blog</a></p>
+              <div class="actions-row">
+                <button class="chip-btn" onclick="editLink(this, '.blog-card', '.blog-link')">Edit Link</button>
+                <button class="chip-btn danger" onclick="removeCard(this, '.blog-card')">Remove</button>
+              </div>
+            </div>
+          </div>
+        </section>
+        <section class="section" id="social">
+          <div class="section-head">
+            <span class="eyebrow" contenteditable="true">Social Media</span>
+            <h2 contenteditable="true">Connect with me</h2>
+            <p contenteditable="true">Add social links, upload icons/images, and make this section fully yours.</p>
+          </div>
+          <div class="list-grid" id="socialContainer">
+            <div class="panel card-item social-card">
+              <img class="social-image" id="socialImage1" src="https://via.placeholder.com/120.png?text=IG" alt="Social icon">
+              <input class="hidden-input" id="socialInput1" type="file" accept="image/*" onchange="handleImageUpload(event, 'socialImage1')" />
+              <h3 contenteditable="true">Instagram</h3>
+              <p><a class="inline-link social-link" href="https://instagram.com/yourname" target="_blank" contenteditable="true">https://instagram.com/yourname</a></p>
+              <div class="actions-row" style="justify-content:center;">
+                <button class="chip-btn" onclick="triggerUpload('socialInput1')">Upload Icon</button>
+                <button class="chip-btn" onclick="editLink(this, '.social-card', '.social-link')">Edit Link</button>
+                <button class="chip-btn danger" onclick="removeCard(this, '.social-card')">Remove</button>
+              </div>
+            </div>
+          </div>
+        </section>
+        <section class="section" id="contact">
+          <div class="section-head">
+            <span class="eyebrow" contenteditable="true">Contact</span>
+            <h2 contenteditable="true">Contact Me</h2>
+            <p contenteditable="true">You can show your contact details and also keep a contact form layout here.</p>
+          </div>
+          <div class="panel contact-card">
+            <p contenteditable="true">Email: yourname@email.com</p>
+            <p contenteditable="true">Phone: +91 12345 67890</p>
+            <p contenteditable="true">Location: Your City, India</p>
+            <div class="form-grid">
+              <input class="fake-input" type="text" placeholder="Visitor Name">
+              <input class="fake-input" type="email" placeholder="Visitor Email">
+              <textarea class="fake-textarea" placeholder="Your Message"></textarea>
+            </div>
+            <div class="actions-row">
+              <button class="mini-btn" type="button">Send Message</button>
+            </div>
+          </div>
+        </section>
+        <footer>
+          <p contenteditable="true">© 2026 Your Name. Built with energy and personality.</p>
+        </footer>
+      </div>
+    </div>
+  </div>
+  <script>
+    const STORAGE_KEY = "editable-portfolio-pro-v1";
+    let projectCount = 1;
+    let socialCount = 1;
+    function saveSite() {
+      const app = document.getElementById("app").innerHTML;
+      localStorage.setItem(STORAGE_KEY, app);
+      alert("Changes saved in your browser.");
+    }
+    function loadSite() {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        document.getElementById("app").innerHTML = saved;
+        refreshCounters();
+      }
+    }
+    function resetSite() {
+      localStorage.removeItem(STORAGE_KEY);
+      location.reload();
+    }
+    function triggerUpload(inputId) {
+      const input = document.getElementById(inputId);
+      if (input) input.click();
+    }
+    function handleImageUpload(event, imageId) {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const img = document.getElementById(imageId);
+        if (img) img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+    function editLink(button, cardSelector, linkSelector) {
+      const card = button.closest(cardSelector);
+      if (!card) return;
+      const link = card.querySelector(linkSelector);
+      const current = link ? link.getAttribute("href") || link.textContent.trim() : "";
+      const next = prompt("Enter full link (https://...)", current);
+      if (next && link) {
+        link.href = next;
+        link.textContent = next;
+      }
+    }
+    function removeCard(button, selector) {
+      const card = button.closest(selector);
+      if (card) card.remove();
+    }
+    function addEducation() {
+      const container = document.getElementById("educationContainer");
+      const div = document.createElement("div");
+      div.className = "panel card-item education-card";
+      div.innerHTML = `
+        <div class="meta" contenteditable="true">Year - Year</div>
+        <h3 contenteditable="true">Degree / Course</h3>
+        <p contenteditable="true">School / College Name</p>
+        <p contenteditable="true">Grade / CGPA / Achievement</p>
+        <button class="chip-btn danger" onclick="removeCard(this, '.education-card')">Remove</button>
+      `;
+      container.appendChild(div);
+    }
+    function addProject() {
+      projectCount += 1;
+      const imageId = "projectImage" + projectCount;
+      const inputId = "projectInput" + projectCount;
+      const container = document.getElementById("projectsContainer");
+      const div = document.createElement("div");
+      div.className = "panel card-item project-card";
+      div.innerHTML = `
+        <img class="project-image" id="${imageId}" src="https://via.placeholder.com/600x400.png?text=Project+Image" alt="Project image">
+        <input class="hidden-input" id="${inputId}" type="file" accept="image/*" onchange="handleImageUpload(event, '${imageId}')" />
+        <div class="meta" contenteditable="true">Project Category</div>
+        <h3 contenteditable="true">New Project Title</h3>
+        <p contenteditable="true">Write your project description here.</p>
+        <p><a class="inline-link project-link" href="https://example.com" target="_blank" contenteditable="true">https://example.com</a></p>
+        <div class="actions-row">
+          <button class="chip-btn" onclick="triggerUpload('${inputId}')">Upload Image</button>
+          <button class="chip-btn" onclick="editLink(this, '.project-card', '.project-link')">Edit Link</button>
+          <button class="chip-btn danger" onclick="removeCard(this, '.project-card')">Remove</button>
+        </div>
+      `;
+      container.appendChild(div);
+    }
+    function addBlog() {
+      const container = document.getElementById("blogContainer");
+      const div = document.createElement("div");
+      div.className = "panel card-item blog-card";
+      div.innerHTML = `
+        <div class="meta" contenteditable="true">Month Year</div>
+        <h3 contenteditable="true">New Blog Title</h3>
+        <p contenteditable="true">Write a short summary of your article, tutorial, or blog post here.</p>
+        <p><a class="inline-link blog-link" href="https://example.com/blog-post" target="_blank" contenteditable="true">https://example.com/blog-post</a></p>
+        <div class="actions-row">
+          <button class="chip-btn" onclick="editLink(this, '.blog-card', '.blog-link')">Edit Link</button>
+          <button class="chip-btn danger" onclick="removeCard(this, '.blog-card')">Remove</button>
+        </div>
+      `;
+      container.appendChild(div);
+    }
+    function addSocial() {
+      socialCount += 1;
+      const imageId = "socialImage" + socialCount;
+      const inputId = "socialInput" + socialCount;
+      const container = document.getElementById("socialContainer");
+      const div = document.createElement("div");
+      div.className = "panel card-item social-card";
+      div.innerHTML = `
+        <img class="social-image" id="${imageId}" src="https://via.placeholder.com/120.png?text=Icon" alt="Social icon">
+        <input class="hidden-input" id="${inputId}" type="file" accept="image/*" onchange="handleImageUpload(event, '${imageId}')" />
+        <h3 contenteditable="true">Platform Name</h3>
+        <p><a class="inline-link social-link" href="https://example.com" target="_blank" contenteditable="true">https://example.com</a></p>
+        <div class="actions-row" style="justify-content:center;">
+          <button class="chip-btn" onclick="triggerUpload('${inputId}')">Upload Icon</button>
+          <button class="chip-btn" onclick="editLink(this, '.social-card', '.social-link')">Edit Link</button>
+          <button class="chip-btn danger" onclick="removeCard(this, '.social-card')">Remove</button>
+        </div>
+      `;
+      container.appendChild(div);
+    }
+    function refreshCounters() {
+      const projectImages = document.querySelectorAll('[id^="projectImage"]');
+      const socialImages = document.querySelectorAll('[id^="socialImage"]');
+      projectCount = projectImages.length || 1;
+      socialCount = socialImages.length || 1;
+    }
+    loadSite();
+  </script>
+</body>
+</html>
