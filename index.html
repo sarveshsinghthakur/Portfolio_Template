@@ -643,133 +643,171 @@
       </div>
     </div>
   </div>
-  <script>
-    const STORAGE_KEY = "editable-portfolio-pro-v1";
-    let projectCount = 1;
-    let socialCount = 1;
-    function saveSite() {
-      const app = document.getElementById("app").innerHTML;
-      localStorage.setItem(STORAGE_KEY, app);
-      alert("Changes saved in your browser.");
+<script>
+  const STORAGE_KEY = "editable-portfolio-pro-v1";
+  let projectCount = 1;
+  let socialCount = 1;
+  function saveSite() {
+    const app = document.getElementById("app").innerHTML;
+    localStorage.setItem(STORAGE_KEY, app);
+    downloadCleanPortfolio();
+    alert("Changes saved and clean portfolio downloaded.");
+  }
+  function downloadCleanPortfolio() {
+    const clone = document.documentElement.cloneNode(true);
+    const liveApp = document.getElementById("app");
+    const cloneApp = clone.querySelector("#app");
+    if (liveApp && cloneApp) {
+      cloneApp.innerHTML = liveApp.innerHTML;
     }
-    function loadSite() {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        document.getElementById("app").innerHTML = saved;
-        refreshCounters();
+    clone.querySelectorAll(".toolbar, .tip, .hidden-input, script").forEach(el => el.remove());
+    clone.querySelectorAll("button").forEach(el => el.remove());
+    clone.querySelectorAll("[contenteditable]").forEach(el => {
+      el.removeAttribute("contenteditable");
+    });
+    clone.querySelectorAll("[onclick]").forEach(el => {
+      el.removeAttribute("onclick");
+    });
+    const liveFields = document.querySelectorAll("input:not([type='file']), textarea");
+    const cloneFields = clone.querySelectorAll("input:not([type='file']), textarea");
+    liveFields.forEach((field, index) => {
+      const cloneField = cloneFields[index];
+      if (!cloneField) return;
+      if (field.tagName === "TEXTAREA") {
+        cloneField.textContent = field.value;
+      } else {
+        cloneField.setAttribute("value", field.value);
       }
+    });
+    const html = "<!DOCTYPE html>\n" + clone.outerHTML;
+    const blob = new Blob([html], { type: "text/html" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "portfolio.html";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+  function loadSite() {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      document.getElementById("app").innerHTML = saved;
+      refreshCounters();
     }
-    function resetSite() {
-      localStorage.removeItem(STORAGE_KEY);
-      location.reload();
+  }
+  function resetSite() {
+    localStorage.removeItem(STORAGE_KEY);
+    location.reload();
+  }
+  function triggerUpload(inputId) {
+    const input = document.getElementById(inputId);
+    if (input) input.click();
+  }
+  function handleImageUpload(event, imageId) {
+    const file = event.target.files && event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const img = document.getElementById(imageId);
+      if (img) img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+  function editLink(button, cardSelector, linkSelector) {
+    const card = button.closest(cardSelector);
+    if (!card) return;
+    const link = card.querySelector(linkSelector);
+    const current = link ? link.getAttribute("href") || link.textContent.trim() : "";
+    const next = prompt("Enter full link (https://...)", current);
+    if (next && link) {
+      link.href = next;
+      link.textContent = next;
     }
-    function triggerUpload(inputId) {
-      const input = document.getElementById(inputId);
-      if (input) input.click();
-    }
-    function handleImageUpload(event, imageId) {
-      const file = event.target.files && event.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        const img = document.getElementById(imageId);
-        if (img) img.src = e.target.result;
-      };
-      reader.readAsDataURL(file);
-    }
-    function editLink(button, cardSelector, linkSelector) {
-      const card = button.closest(cardSelector);
-      if (!card) return;
-      const link = card.querySelector(linkSelector);
-      const current = link ? link.getAttribute("href") || link.textContent.trim() : "";
-      const next = prompt("Enter full link (https://...)", current);
-      if (next && link) {
-        link.href = next;
-        link.textContent = next;
-      }
-    }
-    function removeCard(button, selector) {
-      const card = button.closest(selector);
-      if (card) card.remove();
-    }
-    function addEducation() {
-      const container = document.getElementById("educationContainer");
-      const div = document.createElement("div");
-      div.className = "panel card-item education-card";
-      div.innerHTML = `
-        <div class="meta" contenteditable="true">Year - Year</div>
-        <h3 contenteditable="true">Degree / Course</h3>
-        <p contenteditable="true">School / College Name</p>
-        <p contenteditable="true">Grade / CGPA / Achievement</p>
-        <button class="chip-btn danger" onclick="removeCard(this, '.education-card')">Remove</button>
-      `;
-      container.appendChild(div);
-    }
-    function addProject() {
-      projectCount += 1;
-      const imageId = "projectImage" + projectCount;
-      const inputId = "projectInput" + projectCount;
-      const container = document.getElementById("projectsContainer");
-      const div = document.createElement("div");
-      div.className = "panel card-item project-card";
-      div.innerHTML = `
-        <img class="project-image" id="${imageId}" src="https://via.placeholder.com/600x400.png?text=Project+Image" alt="Project image">
-        <input class="hidden-input" id="${inputId}" type="file" accept="image/*" onchange="handleImageUpload(event, '${imageId}')" />
-        <div class="meta" contenteditable="true">Project Category</div>
-        <h3 contenteditable="true">New Project Title</h3>
-        <p contenteditable="true">Write your project description here.</p>
-        <p><a class="inline-link project-link" href="https://example.com" target="_blank" contenteditable="true">https://example.com</a></p>
-        <div class="actions-row">
-          <button class="chip-btn" onclick="triggerUpload('${inputId}')">Upload Image</button>
-          <button class="chip-btn" onclick="editLink(this, '.project-card', '.project-link')">Edit Link</button>
-          <button class="chip-btn danger" onclick="removeCard(this, '.project-card')">Remove</button>
-        </div>
-      `;
-      container.appendChild(div);
-    }
-    function addBlog() {
-      const container = document.getElementById("blogContainer");
-      const div = document.createElement("div");
-      div.className = "panel card-item blog-card";
-      div.innerHTML = `
-        <div class="meta" contenteditable="true">Month Year</div>
-        <h3 contenteditable="true">New Blog Title</h3>
-        <p contenteditable="true">Write a short summary of your article, tutorial, or blog post here.</p>
-        <p><a class="inline-link blog-link" href="https://example.com/blog-post" target="_blank" contenteditable="true">https://example.com/blog-post</a></p>
-        <div class="actions-row">
-          <button class="chip-btn" onclick="editLink(this, '.blog-card', '.blog-link')">Edit Link</button>
-          <button class="chip-btn danger" onclick="removeCard(this, '.blog-card')">Remove</button>
-        </div>
-      `;
-      container.appendChild(div);
-    }
-    function addSocial() {
-      socialCount += 1;
-      const imageId = "socialImage" + socialCount;
-      const inputId = "socialInput" + socialCount;
-      const container = document.getElementById("socialContainer");
-      const div = document.createElement("div");
-      div.className = "panel card-item social-card";
-      div.innerHTML = `
-        <img class="social-image" id="${imageId}" src="https://via.placeholder.com/120.png?text=Icon" alt="Social icon">
-        <input class="hidden-input" id="${inputId}" type="file" accept="image/*" onchange="handleImageUpload(event, '${imageId}')" />
-        <h3 contenteditable="true">Platform Name</h3>
-        <p><a class="inline-link social-link" href="https://example.com" target="_blank" contenteditable="true">https://example.com</a></p>
-        <div class="actions-row" style="justify-content:center;">
-          <button class="chip-btn" onclick="triggerUpload('${inputId}')">Upload Icon</button>
-          <button class="chip-btn" onclick="editLink(this, '.social-card', '.social-link')">Edit Link</button>
-          <button class="chip-btn danger" onclick="removeCard(this, '.social-card')">Remove</button>
-        </div>
-      `;
-      container.appendChild(div);
-    }
-    function refreshCounters() {
-      const projectImages = document.querySelectorAll('[id^="projectImage"]');
-      const socialImages = document.querySelectorAll('[id^="socialImage"]');
-      projectCount = projectImages.length || 1;
-      socialCount = socialImages.length || 1;
-    }
-    loadSite();
-  </script>
+  }
+  function removeCard(button, selector) {
+    const card = button.closest(selector);
+    if (card) card.remove();
+  }
+  function addEducation() {
+    const container = document.getElementById("educationContainer");
+    const div = document.createElement("div");
+    div.className = "panel card-item education-card";
+    div.innerHTML = `
+      <div class="meta" contenteditable="true">Year - Year</div>
+      <h3 contenteditable="true">Degree / Course</h3>
+      <p contenteditable="true">School / College Name</p>
+      <p contenteditable="true">Grade / CGPA / Achievement</p>
+      <button class="chip-btn danger" onclick="removeCard(this, '.education-card')">Remove</button>
+    `;
+    container.appendChild(div);
+  }
+  function addProject() {
+    projectCount += 1;
+    const imageId = "projectImage" + projectCount;
+    const inputId = "projectInput" + projectCount;
+    const container = document.getElementById("projectsContainer");
+    const div = document.createElement("div");
+    div.className = "panel card-item project-card";
+    div.innerHTML = `
+      <img class="project-image" id="${imageId}" src="https://via.placeholder.com/600x400.png?text=Project+Image" alt="Project image">
+      <input class="hidden-input" id="${inputId}" type="file" accept="image/*" onchange="handleImageUpload(event, '${imageId}')" />
+      <div class="meta" contenteditable="true">Project Category</div>
+      <h3 contenteditable="true">New Project Title</h3>
+      <p contenteditable="true">Write your project description here.</p>
+      <p><a class="inline-link project-link" href="https://example.com" target="_blank" contenteditable="true">https://example.com</a></p>
+      <div class="actions-row">
+        <button class="chip-btn" onclick="triggerUpload('${inputId}')">Upload Image</button>
+        <button class="chip-btn" onclick="editLink(this, '.project-card', '.project-link')">Edit Link</button>
+        <button class="chip-btn danger" onclick="removeCard(this, '.project-card')">Remove</button>
+      </div>
+    `;
+    container.appendChild(div);
+  }
+  function addBlog() {
+    const container = document.getElementById("blogContainer");
+    const div = document.createElement("div");
+    div.className = "panel card-item blog-card";
+    div.innerHTML = `
+      <div class="meta" contenteditable="true">Month Year</div>
+      <h3 contenteditable="true">New Blog Title</h3>
+      <p contenteditable="true">Write a short summary of your article, tutorial, or blog post here.</p>
+      <p><a class="inline-link blog-link" href="https://example.com/blog-post" target="_blank" contenteditable="true">https://example.com/blog-post</a></p>
+      <div class="actions-row">
+        <button class="chip-btn" onclick="editLink(this, '.blog-card', '.blog-link')">Edit Link</button>
+        <button class="chip-btn danger" onclick="removeCard(this, '.blog-card')">Remove</button>
+      </div>
+    `;
+    container.appendChild(div);
+  }
+  function addSocial() {
+    socialCount += 1;
+    const imageId = "socialImage" + socialCount;
+    const inputId = "socialInput" + socialCount;
+    const container = document.getElementById("socialContainer");
+    const div = document.createElement("div");
+    div.className = "panel card-item social-card";
+    div.innerHTML = `
+      <img class="social-image" id="${imageId}" src="https://via.placeholder.com/120.png?text=Icon" alt="Social icon">
+      <input class="hidden-input" id="${inputId}" type="file" accept="image/*" onchange="handleImageUpload(event, '${imageId}')" />
+      <h3 contenteditable="true">Platform Name</h3>
+      <p><a class="inline-link social-link" href="https://example.com" target="_blank" contenteditable="true">https://example.com</a></p>
+      <div class="actions-row" style="justify-content:center;">
+        <button class="chip-btn" onclick="triggerUpload('${inputId}')">Upload Icon</button>
+        <button class="chip-btn" onclick="editLink(this, '.social-card', '.social-link')">Edit Link</button>
+        <button class="chip-btn danger" onclick="removeCard(this, '.social-card')">Remove</button>
+      </div>
+    `;
+    container.appendChild(div);
+  }
+  function refreshCounters() {
+    const projectImages = document.querySelectorAll('[id^="projectImage"]');
+    const socialImages = document.querySelectorAll('[id^="socialImage"]');
+    projectCount = projectImages.length || 1;
+    socialCount = socialImages.length || 1;
+  }
+  loadSite();
+</script>
 </body>
 </html>
